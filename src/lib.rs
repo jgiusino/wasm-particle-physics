@@ -32,9 +32,9 @@ pub struct Particle {
 }
 
 impl Particle {
-    fn tick(&mut self, dt: f32, g: f32, p_vec: &Vec<Particle>) {
+    fn tick(&mut self, dt: f32, cfg: &Config, p_vec: &Vec<Particle>) {
         // apply gravitational force
-        self.velocity.y -= g * dt;
+        self.velocity.y -= cfg.gravity * dt;
 
         for p in p_vec {
             // get postion difference
@@ -53,11 +53,8 @@ impl Particle {
             // skip force calculation if too distant
             if magnitude > 40.0 { continue; }
             
-            // constant (may be adjustable later)
-            let k = 1.0;
-
             // calculate force based on a modified Coulomb law
-            let force = k / (x_diff.powi(2) + y_diff.powi(2) + z_diff.powi(2));
+            let force = cfg.k / (x_diff.powi(2) + y_diff.powi(2) + z_diff.powi(2));
 
             // update velocity using normalized components
             self.velocity.x += force * x_diff / magnitude;
@@ -93,16 +90,18 @@ impl Particle {
 pub struct Config {
     particle_num: usize,
     gravity: f32,
+    k: f32,
 }
 
 impl Config {
     pub fn new() -> Config {
         let particle_num = 1000;
         let gravity = 9.81;
-
+        let k = 1.0;
         Config {  
             particle_num,
             gravity,
+            k,
         }
     }
 }
@@ -149,7 +148,7 @@ impl Simulation {
         let other_p = &mut self.particles.clone();
         for i in 0..self.particles.len() {
             let p = &mut self.particles[i];
-            p.tick(dt, self.config.gravity, &other_p);
+            p.tick(dt, &self.config, &other_p);
         }
     }
     
@@ -221,5 +220,13 @@ impl Simulation {
 
     pub fn update_gravity(&mut self, g: f32) {
         self.config.gravity = g;
+    }
+
+    pub fn k(&self) -> f32 {
+        self.config.k
+    }
+
+    pub fn update_k(&mut self, k: f32) {
+        self.config.k = k;
     }
 }

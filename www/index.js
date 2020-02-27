@@ -73,20 +73,23 @@ class Options {
         this.width = simulation.width();
         this.depth = simulation.depth();
         this.gravity = simulation.gravity();
+        this.k = simulation.k();
     }
 }
 
 // render loop for the simulation
 function animate() {
-    requestAnimationFrame( animate );
-    simulationUpdate();
-    controls.update();
-    renderer.render( scene, camera );
+    setTimeout(()=>{
+        requestAnimationFrame( animate );
+        simulationUpdate();
+        controls.update();
+        renderer.render( scene, camera );
+    }, 1000/30)
 }
 
 // updates all particles in the simulation and updates particle postions
 function simulationUpdate() {
-    simulation.tick(0.05);
+    simulation.tick(0.0333);
     simulation.check_collision();
     // iterates through the mesh array and particle position/velocity array
     for (let index = 0; index < meshArray.length; index++) {
@@ -108,10 +111,11 @@ function simulationUpdate() {
 function addGUI() {
     var gui = new dat.GUI();
     var text = new Options;
-    var height = gui.add(text, 'height', 0.0, 1000.0);
-    var width = gui.add(text, 'width', 0.0, 1000.0);
-    var depth = gui.add(text, 'depth', 0.0, 1000.0);
-    var gravity = gui.add(text, 'gravity', 0.0, 100.0);
+    var height = gui.add(text, 'height', 1.0, 500.0);
+    var width = gui.add(text, 'width', 1.0, 500.0);
+    var depth = gui.add(text, 'depth', 1.0, 500.0);
+    var gravity = gui.add(text, 'gravity', -50.0, 50.0);
+    var k = gui.add(text, 'k', -10.0, 10.0, 0.1);
     height.onChange((value) => {
         var original = simulation.height();
         simulation.update_height(value);
@@ -135,6 +139,9 @@ function addGUI() {
     });
     gravity.onChange((value) => {
         simulation.update_gravity(value);
+    });
+    k.onChange((value) =>{
+        simulation.update_k(value);
     });
 }
 
