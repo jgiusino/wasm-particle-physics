@@ -8,7 +8,6 @@ import * as dat from 'dat.gui';
 // instantiate simulation
 var simulation = wasm.Simulation.new();
 
-
 // create scene and camera
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(
@@ -30,6 +29,21 @@ var controls = new OrbitControls(camera, renderer.domElement);
 
 var geometry = new THREE.SphereGeometry(0.25,8,8);
 var material = new THREE.MeshNormalMaterial();
+var cubeGeometry = new THREE.BoxGeometry(
+    simulation.width(),
+    simulation.height(),
+    simulation.depth()
+);
+var cubeMaterial = new THREE.LineBasicMaterial({
+    color: 0xffffff,
+    linewidth: 1,
+    //scale: 1,
+    //dashSize: 3,
+    //gapSize: 1,
+});
+var wireframe = new THREE.LineSegments(cubeGeometry, cubeMaterial);
+wireframe.position.set(100,100,100);
+scene.add(wireframe);
 
 // create particles array to access particle positions and velocity data
 // for each particle. Each particle has a x,y,z position and x,y,z velocity
@@ -38,7 +52,7 @@ var particleCount = simulation.particle_count();
 var particlesPtr = simulation.particles();
 var particles = new Float32Array(memory.buffer, particlesPtr, particleCount*6);
 
-// particle mech to represent each particle in 3D space
+// particle mesh to represent each particle in 3D space
 var particleMesh = new THREE.Mesh( geometry, material );
 
 // an array to store the individual meshes for each particle 
@@ -72,7 +86,7 @@ function animate() {
 
 // updates all particles in the simulation and updates particle postions
 function simulationUpdate() {
-    simulation.tick(0.1);
+    simulation.tick(0.05);
     simulation.check_collision();
     // iterates through the mesh array and particle position/velocity array
     for (let index = 0; index < meshArray.length; index++) {
@@ -99,13 +113,25 @@ function addGUI() {
     var depth = gui.add(text, 'depth', 0.0, 1000.0);
     var gravity = gui.add(text, 'gravity', 0.0, 100.0);
     height.onChange((value) => {
+        var original = simulation.height();
         simulation.update_height(value);
+        var scaleY = value / original;
+        wireframe.geometry.scale(1,scaleY,1);
+        wireframe.translateY((value - original)/2);
     });
     width.onChange((value) => {
+        var original = simulation.width();
         simulation.update_width(value);
+        var scaleX = value / original;
+        wireframe.geometry.scale(scaleX,1,1);
+        wireframe.translateX((value - original)/2);
     });
     depth.onChange((value) => {
+        var original = simulation.depth();
         simulation.update_depth(value);
+        var scaleZ = value / original;
+        wireframe.geometry.scale(1,1,scaleZ);
+        wireframe.translateZ((value - original)/2);
     });
     gravity.onChange((value) => {
         simulation.update_gravity(value);
